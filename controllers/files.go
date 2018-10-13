@@ -84,6 +84,98 @@ func (this *FilesController) List() {
 	this.Data["Val"] = len(userFiles)
 }
 
+func (this *FilesController)  Download() {
+
+	fileMarker := this.Ctx.Input.Param(":name")
+	this.TplName = "index.tpl"
+	this.Data["Website"] = fileMarker
+
+	sess := this.StartSession()
+	defer sess.SessionRelease(this.Ctx.ResponseWriter)
+	userId := sess.Get("userId")
+	o := orm.NewOrm()
+	o.Using("default")
+	var user models.User
+
+	if err := o.QueryTable(new(models.User)).Filter("id", userId).One(&user); err != nil {
+		this.Redirect("/login", 302)
+	}
+	//this.Data["items"] = user.Files
+
+	//var files []*models.File
+	//o.QueryTable(new(models.UserFile)).Filter("user_id", user.Id).OrderBy("upload_time").All(&files)
+	//
+	qb, _ := orm.NewQueryBuilder("mysql")
+	qb.Select(
+		"users_files.user_id",
+		"users_files.file_id",
+		"users_files.user_file_name",
+		"users_files.mode",
+		"users_files.upload_time",
+		"files.stored").
+		From("users_files").
+		InnerJoin("files").On("users_files.file_id = files.id").
+		Where("users_files.user_id = ? AND users_files.upload_time = ?")
+
+	var userFiles []Test
+	sql := qb.String()
+	o.Raw(sql, userId, fileMarker).QueryRows(&userFiles)
+	this.Data["Website"] = len(userFiles)
+	if len(userFiles) > 0 {
+		this.Data["Email"] = userFiles[0].Stored
+		this.Ctx.Output.Download(userFiles[0].Stored)
+	}
+
+	this.Redirect("/", 302)
+}
+
+func (this *FilesController) DeleteLink() {
+
+	fileMarker := this.Ctx.Input.Param(":name")
+	this.TplName = "index.tpl"
+	this.Data["Website"] = fileMarker
+
+	sess := this.StartSession()
+	defer sess.SessionRelease(this.Ctx.ResponseWriter)
+	userId := sess.Get("userId")
+	o := orm.NewOrm()
+	o.Using("default")
+	var user models.User
+
+	if err := o.QueryTable(new(models.User)).Filter("id", userId).One(&user); err != nil {
+		this.Redirect("/login", 302)
+	}
+	//this.Data["items"] = user.Files
+
+	//var files []*models.File
+	//o.QueryTable(new(models.UserFile)).Filter("user_id", user.Id).OrderBy("upload_time").All(&files)
+	//
+	qb, _ := orm.NewQueryBuilder("mysql")
+	qb.Select(
+	"users_files.user_id",
+	"users_files.file_id",
+	"users_files.user_file_name",
+	"users_files.mode",
+	"users_files.upload_time",
+	"files.stored").
+	From("users_files").
+	InnerJoin("files").On("users_files.file_id = files.id").
+	Where("users_files.user_id = ? AND users_files.upload_time = ?")
+
+	var userFiles []Test
+	sql := qb.String()
+	o.Raw(sql, userId, fileMarker).QueryRows(&userFiles)
+	this.Data["Website"] = len(userFiles)
+	if len(userFiles) > 0 {
+		_, err := o.Raw("DELETE FROM users_files " +
+			"WHERE user_id = ? AND file_id = ? AND upload_time = ?",
+			userFiles[0].UserId,
+			userFiles[0].FileId,
+			userFiles[0].UploadTime).Exec()
+		this.Data["Error"] = err
+	}
+	this.Redirect("/user/"+user.Login, 302)
+}
 
 func (this *FilesController) Upload() {
 
@@ -149,12 +241,13 @@ func (this *FilesController) Upload() {
 
 	AddFileToUser(&user, &fileItem, header.Filename)
 	os.Remove(newFileNamePath)
+	this.Redirect("/user/"+user.Login, 302)
 }
 
 func AddFileToUser(user *models.User, file *models.File, fileName string) {
 	var o = orm.NewOrm()
 	o.Using("default")
 
-	var link = models.UserFile{UserId:user.Id, FileId:file.Id, UserFileName:fileName, Mode:0, UploadTime: time.Now().String()}
+	var link = models.UserFile{UserId:user.Id, FileId:file.Id, UserFileName:fileName, Mode:0, UploadTime: time.Now().Format(time.RFC3339)}
 	o.Insert(&link)
 }
