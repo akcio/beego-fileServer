@@ -1,7 +1,12 @@
 package controllers
 
 import (
+	"crypto/md5"
+	"encoding/hex"
+	"fileServer/testBeeGo/models"
+	"fmt"
 	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/orm"
 )
 
 type NewController struct {
@@ -25,6 +30,25 @@ func (main *MainController) HelloSitepoint() {
 	main.Data["Id"] = main.Ctx.Input.Param(":id")
 
 	main.TplName = "default/hello-sitepoint.tpl"
+
+	o := orm.NewOrm()
+	o.Using("default")
+
+	hasher := md5.New()
+	hasher.Write([]byte("123456"))
+	hashedPass := hex.EncodeToString(hasher.Sum(nil))
+
+	user := models.User{Login: "test", Password: hashedPass}
+	id, err := o.Insert(&user)
+	if err == nil {
+		msg := fmt.Sprintf("Article inserted with id:", id)
+		beego.Debug(msg)
+	} else {
+		msg := fmt.Sprintf("Couldn't insert new article. Reason: ", err)
+		beego.Debug(msg)
+	}
+
+
 }
 
 func (this *NewController) Get() {
@@ -44,3 +68,4 @@ func (this *NewController) Get() {
 	this.TplName = "fileList.tpl"
 
 }
+
