@@ -7,8 +7,7 @@ import (
 
 
 func main() {
-	beego.BConfig.MaxMemory = 1 << 22
-	beego.BConfig.WebConfig.Session.SessionOn = true
+	beego.BConfig.WebConfig.Session.SessionOn = beego.AppConfig.Bool("sessionOn")
 	beego.Run()
 }
 
