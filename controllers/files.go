@@ -5,6 +5,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fileServer/testBeeGo/models"
+	"fileServer/testBeeGo/models/helpers"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 	"io/ioutil"
@@ -46,16 +47,9 @@ type Test struct {
 }
 
 func (this *FilesController) List() {
-	sess := this.StartSession()
-	defer sess.SessionRelease(this.Ctx.ResponseWriter)
-	userId := sess.Get("userId")
-	o := orm.NewOrm()
-	o.Using("default")
-	var user models.User
-
-	if err := o.QueryTable(new(models.User)).Filter("id", userId).One(&user); err != nil {
-		this.Redirect("/login", 302)
-	}
+	helpers.SetLayoutFor(&this.Controller)
+	var user = helpers.GetCurrentUser(&this.Controller)
+	var o = helpers.GetORM()
 	this.TplName = "fileList.tpl"
 	//this.Data["items"] = user.Files
 
@@ -78,28 +72,21 @@ func (this *FilesController) List() {
 	var userFiles []Test
 
 	sql := qb.String()
-	o.Raw(sql, userId).QueryRows(&userFiles)
+	o.Raw(sql, user.Id).QueryRows(&userFiles)
 
 	this.Data["Files"] = userFiles
 	this.Data["Val"] = len(userFiles)
 }
 
 func (this *FilesController)  Download() {
+	helpers.SetLayoutFor(&this.Controller)
 
 	fileMarker := this.Ctx.Input.Param(":name")
 	this.TplName = "index.tpl"
 	this.Data["Website"] = fileMarker
 
-	sess := this.StartSession()
-	defer sess.SessionRelease(this.Ctx.ResponseWriter)
-	userId := sess.Get("userId")
-	o := orm.NewOrm()
-	o.Using("default")
-	var user models.User
-
-	if err := o.QueryTable(new(models.User)).Filter("id", userId).One(&user); err != nil {
-		this.Redirect("/login", 302)
-	}
+	var o = helpers.GetORM()
+	var user = helpers.GetCurrentUser(&this.Controller)
 	//this.Data["items"] = user.Files
 
 	//var files []*models.File
@@ -119,7 +106,7 @@ func (this *FilesController)  Download() {
 
 	var userFiles []Test
 	sql := qb.String()
-	o.Raw(sql, userId, fileMarker).QueryRows(&userFiles)
+	o.Raw(sql, user.Id, fileMarker).QueryRows(&userFiles)
 	this.Data["Website"] = len(userFiles)
 	if len(userFiles) > 0 {
 		this.Data["Email"] = userFiles[0].Stored
@@ -134,15 +121,9 @@ func (this *FilesController) DeleteLink() {
 	fileMarker := this.Ctx.Input.Param(":name")
 	this.TplName = "index.tpl"
 	this.Data["Website"] = fileMarker
-
-	sess := this.StartSession()
-	defer sess.SessionRelease(this.Ctx.ResponseWriter)
-	userId := sess.Get("userId")
-	o := orm.NewOrm()
-	o.Using("default")
-	var user models.User
-
-	if err := o.QueryTable(new(models.User)).Filter("id", userId).One(&user); err != nil {
+	var o = helpers.GetORM()
+	var user = helpers.GetCurrentUser(&this.Controller)
+	if err := o.QueryTable(new(models.User)).Filter("id", user.Id).One(&user); err != nil {
 		this.Redirect("/login", 302)
 	}
 	//this.Data["items"] = user.Files
@@ -164,7 +145,7 @@ func (this *FilesController) DeleteLink() {
 
 	var userFiles []Test
 	sql := qb.String()
-	o.Raw(sql, userId, fileMarker).QueryRows(&userFiles)
+	o.Raw(sql, user.Id, fileMarker).QueryRows(&userFiles)
 	this.Data["Website"] = len(userFiles)
 	if len(userFiles) > 0 {
 		_, err := o.Raw("DELETE FROM users_files " +
@@ -178,19 +159,10 @@ func (this *FilesController) DeleteLink() {
 }
 
 func (this *FilesController) Upload() {
-
+	helpers.SetLayoutFor(&this.Controller)
+	var o = helpers.GetORM()
+	var user = helpers.GetCurrentUser(&this.Controller)
 	this.TplName = "forms/upload.tpl"
-
-	var sess = this.StartSession()
-	defer sess.SessionRelease(this.Ctx.ResponseWriter)
-	var userId = sess.Get("userId")
-	var o = orm.NewOrm()
-	o.Using("default")
-	var user models.User
-
-	if err := o.QueryTable(new(models.User)).Filter("id", userId).One(&user); err != nil {
-		this.Redirect("/login", 302)
-	}
 
 	var file, header, _ = this.GetFile("the_file")
 
@@ -245,8 +217,7 @@ func (this *FilesController) Upload() {
 }
 
 func AddFileToUser(user *models.User, file *models.File, fileName string) {
-	var o = orm.NewOrm()
-	o.Using("default")
+	var o = helpers.GetORM()
 
 	var link = models.UserFile{UserId:user.Id, FileId:file.Id, UserFileName:fileName, Mode:0, UploadTime: time.Now().Format(time.RFC3339)}
 	o.Insert(&link)

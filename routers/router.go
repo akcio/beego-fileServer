@@ -10,7 +10,7 @@ func init() {
 	//beego.Router("/hello-world/:id([0-9]+)", &controllers.MainController{}, "get:HelloSitepoint")
 	//
     //beego.Router("/list", &controllers.NewController{})
-    beego.Router("/", &controllers.FilesController{}, "get,post:Upload")
+    beego.Router("/", &controllers.FilesController{}, "get,post:List")
 
     beego.Router("/register", &controllers.UserController{}, "get,post:Register")
     beego.Router("/login", &controllers.UserController{}, "get,post:Login")
