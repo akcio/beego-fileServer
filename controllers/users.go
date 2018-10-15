@@ -4,8 +4,8 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fileServer/testBeeGo/models"
+	"fileServer/testBeeGo/models/helpers"
 	"github.com/astaxie/beego"
-	"github.com/astaxie/beego/orm"
 	"strings"
 )
 
@@ -15,10 +15,18 @@ type UserController struct {
 
 
 func (this *UserController) Register() {
+	helpers.SetLayoutFor(&this.Controller)
 	this.TplName = "forms/register.tpl"
+
+	if helpers.IsUserLogedIn(&this.Controller){
+		var user = helpers.GetCurrentUser(&this.Controller)
+		this.Redirect("/user/"+user.Login, 302)
+	}
+
 	if this.Ctx.Input.Method() == "GET" {
 		return
 	}
+
 	login := strings.Trim(this.GetString("login", ""), " ")
 	pass := this.GetString("password", "")
 	repass := this.GetString("repassword", "")
@@ -28,8 +36,7 @@ func (this *UserController) Register() {
 		return
 	}
 
-	o := orm.NewOrm()
-	o.Using("default")
+	o := helpers.GetORM()
 	login = strings.ToLower(login)
 	exist := o.QueryTable(new(models.User)).Filter("login", login).Exist()
 	if exist {
@@ -61,10 +68,19 @@ func (this *UserController) Register() {
 }
 
 func (this *UserController) Login()  {
+	helpers.SetLayoutFor(&this.Controller)
 	this.TplName = "forms/login.tpl"
+
+	if helpers.IsUserLogedIn(&this.Controller){
+		var user = helpers.GetCurrentUser(&this.Controller)
+		this.Redirect("/user/"+user.Login, 302)
+	}
+
 	if this.Ctx.Input.Method() == "GET" {
 		return
 	}
+
+
 
 	login := strings.Trim(this.GetString("login", ""), " ")
 	pass := this.GetString("password", "")
@@ -79,8 +95,7 @@ func (this *UserController) Login()  {
 	hasher.Write([]byte(pass))
 	hashedPass := hex.EncodeToString(hasher.Sum(nil))
 
-	o := orm.NewOrm()
-	o.Using("default")
+	var o = helpers.GetORM()
 
 	var user models.User
 	err := o.QueryTable(new(models.User)).Filter("login", login).Filter("password", hashedPass).One(&user)
