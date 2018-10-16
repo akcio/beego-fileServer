@@ -3,7 +3,7 @@ package controllers
 import (
 	"crypto/md5"
 	"encoding/hex"
-	"fileServer/testBeeGo/models"
+	"beego-fileServer/models"
 	"fmt"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"

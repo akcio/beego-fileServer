@@ -4,8 +4,8 @@ import (
 	"crypto"
 	"crypto/md5"
 	"encoding/hex"
-	"fileServer/testBeeGo/models"
-	"fileServer/testBeeGo/models/helpers"
+	"beego-fileServer/models"
+	"beego-fileServer/models/helpers"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 	"io/ioutil"
@@ -201,7 +201,7 @@ func (this *FilesController) Upload() {
 			fileToAdd.Id = id
 			this.Data["Message"] = "file created"
 			AddFileToUser(&user, &fileToAdd, header.Filename)
-			this.Redirect("/upload", 302)
+			this.Redirect("/user/" + user.Login, 302)
 			return
 		}
 	}

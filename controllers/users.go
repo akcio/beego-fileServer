@@ -3,8 +3,8 @@ package controllers
 import (
 	"crypto/md5"
 	"encoding/hex"
-	"fileServer/testBeeGo/models"
-	"fileServer/testBeeGo/models/helpers"
+	"beego-fileServer/models"
+	"beego-fileServer/models/helpers"
 	"github.com/astaxie/beego"
 	"strings"
 )

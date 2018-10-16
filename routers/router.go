@@ -1,7 +1,7 @@
 package routers
 
 import (
-	"fileServer/testBeeGo/controllers"
+	"beego-fileServer/controllers"
 	"github.com/astaxie/beego"
 )
 
