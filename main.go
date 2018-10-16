@@ -7,7 +7,7 @@ import (
 
 
 func main() {
-	beego.BConfig.WebConfig.Session.SessionOn = beego.AppConfig.Bool("sessionOn")
+	beego.BConfig.WebConfig.Session.SessionOn = true
 	beego.Run()
 }
 
