@@ -27,11 +27,11 @@ func getFileExtension(fileName string) string {
 	res := ""
 	canWrite := false
 	for i:=0; i < len(fileName); i++ {
-		if canWrite {
-			res += string(fileName[i])
-		}
 		if fileName[i] == '.' {
 			canWrite = true
+		}
+		if canWrite {
+			res += string(fileName[i])
 		}
 	}
 	return res
@@ -171,8 +171,11 @@ func (this *FilesController) Upload() {
 	}
 
 	//var p []byte
-
-	newFileNamePath := "/tmp/files/"+ models.GetGUID() + "." +  getFileExtension(header.Filename)
+	var fileFolder = beego.AppConfig.DefaultString("filesFolder", "/tmp/files/")
+	if _, err := os.Stat(fileFolder); os.IsNotExist(err) {
+		os.MkdirAll(fileFolder, os.ModePerm)
+	}
+	newFileNamePath := fileFolder + models.GetGUID() +  getFileExtension(header.Filename)
 	file.Close()
 	this.SaveToFile("the_file", newFileNamePath)
 
