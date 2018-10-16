@@ -1,7 +1,7 @@
 package main
 
 import (
-	_ "fileServer/testBeeGo/routers"
+	_ "beego-fileServer/routers"
 	"github.com/astaxie/beego"
 )
 

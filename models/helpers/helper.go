@@ -1,7 +1,7 @@
 package helpers
 
 import (
-	"fileServer/testBeeGo/models"
+	"beego-fileServer/models"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 )
